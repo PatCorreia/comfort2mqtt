@@ -19,6 +19,7 @@ import datetime
 import threading
 from datetime import timedelta
 import paho.mqtt.client as mqtt
+import os
 
 DOMAIN = "comfort2"
 ALARMSTATETOPIC = DOMAIN+"/alarm"
@@ -46,13 +47,13 @@ ALARMNUMBEROFCOUNTERS = 255        # set according to system
 ALARMCOUNTERINPUTRANGE = DOMAIN+"/counter%d"  #each counter represents a CBus value
 ALARMCOUNTERCOMMANDTOPIC = DOMAIN+"/counter%d/set" # set the counter to a value for between 0 (off) to 255 (full on)
 
-MQTTBROKERIP = "localhost"
-MQTTBROKERPORT = 1883
-MQTTUSERNAME = ""
-MQTTPASSWORD = ""
-COMFORTIP = "192.168.123.88"
-COMFORTPORT = 8008
-PINCODE = "1234"
+MQTTBROKERIP = os.environ.get('MQTTBROKERIP', "localhost")
+MQTTBROKERPORT = os.environ.get("MQTTBROKERPORT", 1883)
+MQTTUSERNAME = os.environ.get("MQTTUSERNAME", "")
+MQTTPASSWORD = os.environ.get("MQTTPASSWORD", "")
+COMFORTIP = os.environ.get('COMFORTIP', "192.168.123.88")
+COMFORTPORT = os.environ.get("COMFORTPORT", 8008)
+PINCODE = os.environ.get("PINCODE", "1234")
 BUFFER_SIZE = 4096
 TIMEOUT = timedelta(seconds=30) #Comfort will disconnect if idle for 120 secs, so make sure this is less than that
 RETRY = timedelta(seconds=5)
@@ -179,9 +180,9 @@ class ComfortEXEntryExitDelayStarted(object):
 class Comfort2(mqtt.Client):
     def init(self, mqtt_ip, mqtt_port, mqtt_username, mqtt_password, comfort_ip, comfort_port, comfort_pincode):
         self.mqtt_ip = mqtt_ip
-        self.mqtt_port = mqtt_port
+        self.mqtt_port = int(mqtt_port)
         self.comfort_ip = comfort_ip
-        self.comfort_port = comfort_port
+        self.comfort_port = int(comfort_port)
         self.comfort_pincode = comfort_pincode
         self.connected = False
         self.username_pw_set(mqtt_username, mqtt_password)

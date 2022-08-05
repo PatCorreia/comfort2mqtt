@@ -10,6 +10,7 @@ You should be familiar with configuring Comfort using the Comfigurator tool firs
 ![hadashboard](hadashboard.png)
 
 # Installation
+## Native instalation
 
 Requires paho-mqtt client. Install using
 ```
@@ -18,7 +19,7 @@ sudo pip3 install paho-mqtt
 
 Download and save comfort2.py to your home folder /home/pi or anywhere else you prefer.
 
-Edit comfort2.py:
+Edit comfort2.py and replace the variables with fixed values. Alternatively, you can set environment variables on your OS:
 ```
 MQTTBROKERIP = "localhost"
 MQTTBROKERPORT = 1883
@@ -33,6 +34,31 @@ PINCODE = "1234"
 - set COMFORTIP, COMFORTPORT to your Comfort ETH02/ETH03 IP address (default ports are 1001,1002)
 - set PINCODE to your Comfort PIN code
 
+## Run as Docker container
+Requires docker.
+
+1. Build image
+   In the same folder as the Dockerfile file, run:
+```
+docker build -t comfort2mqtt .
+```
+1. Run container
+   Replace each environment variable with proper values.
+```
+docker run -it --rm --name comfort2mqtt \
+ -e MQTTBROKERIP='localhost' \
+ -e MQTTUSERNAME='mqtt-user' \
+ -e MQTTPASSWORD='mqtt-password' \
+ -e COMFORTIP='192.168.123.88' \
+ -e COMFORTPORT=8008 \
+ -e PINCODE='1234' \
+ comfort2mqtt
+```
+- set MQTTBROKERIP, MQTTBROKERPORT to your Home Assistant IP address
+- set MQTTUSERNAME, MQTTPASSWORD if your Home Assistant MQTT broker requires authentication
+- set COMFORTIP, COMFORTPORT to your Comfort ETH02/ETH03 IP address (default ports are 1001,1002)
+- set PINCODE to your Comfort PIN code
+  
 # MQTT
 
 The following MQTT topics are published:
