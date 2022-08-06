@@ -58,6 +58,34 @@ docker run -it --rm --name comfort2mqtt \
 - set MQTTUSERNAME, MQTTPASSWORD if your Home Assistant MQTT broker requires authentication
 - set COMFORTIP, COMFORTPORT to your Comfort ETH02/ETH03 IP address (default ports are 1001,1002)
 - set PINCODE to your Comfort PIN code
+
+### Using a zones configuration file.
+You can provide a configuration file `zoneNames.properties` that relates the zone number with it's name.
+example contents of `zoneNames.properties`:
+```
+1=Entry Door
+2=Entry Hall Motion
+3=Living Room Motion
+4=Kitchen Motion
+17=Guest Bedroom Balcony Door
+18=Master Bedroom Balcony Door
+19=Master Bedroom Balcony Window
+```
+This will generate messages with improved readabillity. Instead of "Intruder, Zone 2", the new message will be "Intruder, Zone Entry Hall Motion".
+
+To provide the config file, mount a volume with the `zoneNames.properties` in the `/usr/src/app/config/` container folder.
+In the following example, the `zoneNames.properties` is in a `files` subfolder, relative to the current directory:
+```
+docker run -it --rm --name comfort2mqtt \
+ -e MQTTBROKERIP='localhost' \
+ -e MQTTUSERNAME='mqtt-user' \
+ -e MQTTPASSWORD='mqtt-password' \
+ -e COMFORTIP='192.168.123.88' \
+ -e COMFORTPORT=8008 \
+ -e PINCODE='1234' \
+ -v "${PWD}/files:/usr/src/app/config/" \
+ comfort2mqtt
+```
   
 # MQTT
 

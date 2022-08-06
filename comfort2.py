@@ -20,6 +20,7 @@ import threading
 from datetime import timedelta
 import paho.mqtt.client as mqtt
 import os
+from pathlib import Path
 
 DOMAIN = "comfort2"
 ALARMSTATETOPIC = DOMAIN+"/alarm"
@@ -144,12 +145,14 @@ class ComfortERArmReadyNotReady(object):
         self.zone = int(data[2:4],16)
 
 class ComfortAMSystemAlarmReport(object):
-    def __init__(self, data={}):
+    def __init__(self, data={}, zoneNames={}):
         self.alarm = int(data[2:4],16)
         self.triggered = True   #for comfort alarm state Alert, Trouble, Alarm
         self.parameter = int(data[4:6],16)
-        if self.alarm == 0: self.message = "Intruder, Zone "+str(self.parameter)
-        elif self.alarm == 1: self.message = "Zone "+str(self.parameter)+" Trouble"
+        zoneNumber = str(self.parameter)
+
+        if self.alarm == 0: self.message = "Intruder, Zone "+zoneNames.get((zoneNumber), zoneNumber)
+        elif self.alarm == 1: self.message = "Zone "+zoneNames.get((zoneNumber), zoneNumber)+" Trouble"
         elif self.alarm == 2: self.message = "Low Battery"
         elif self.alarm == 3: self.message = "Power Failure"
         elif self.alarm == 4: self.message = "Phone Trouble"
@@ -158,12 +161,12 @@ class ComfortAMSystemAlarmReport(object):
         elif self.alarm == 8: self.message = "Disarm"; self.triggered = False
         elif self.alarm == 9: self.message = "Arm"; self.triggered = False
         elif self.alarm == 10: self.message = "Tamper"
-        elif self.alarm == 12: self.message = "Entry Warning, Zone "+str(self.parameter); self.triggered = False
+        elif self.alarm == 12: self.message = "Entry Warning, Zone "+zoneNames.get((zoneNumber), zoneNumber); self.triggered = False
         elif self.alarm == 13: self.message = "Alarm Abort"; self.triggered = False
         elif self.alarm == 14: self.message = "Siren Tamper"
-        elif self.alarm == 15: self.message = "Bypass, Zone "+str(self.parameter); self.triggered = False
+        elif self.alarm == 15: self.message = "Bypass, Zone "+zoneNames.get((zoneNumber), zoneNumber); self.triggered = False
         elif self.alarm == 17: self.message = "Dial Test"; self.triggered = False
-        elif self.alarm == 19: self.message = "Entry Alert, Zone "+str(self.parameter); self.triggered = False
+        elif self.alarm == 19: self.message = "Entry Alert, Zone "+zoneNames.get((zoneNumber), zoneNumber); self.triggered = False
         elif self.alarm == 20: self.message = "Fire"
         elif self.alarm == 21: self.message = "Panic"
         elif self.alarm == 22: self.message = "GSM Trouble"
@@ -186,6 +189,21 @@ class Comfort2(mqtt.Client):
         self.comfort_pincode = comfort_pincode
         self.connected = False
         self.username_pw_set(mqtt_username, mqtt_password)
+
+    def loadZoneNames(self):
+        print("Loading zone names file")
+        self.zoneNames = {}
+        zoneNamesFilePath = Path(os.path.join(os.path.dirname(__file__), "config/zoneNames.properties"))
+        if zoneNamesFilePath.is_file():
+            with open(zoneNamesFilePath, 'r') as zoneNamesFile:
+                for line in zoneNamesFile:
+                    name, var = line.partition("=")[::2]
+                    self.zoneNames[name.strip()] = var
+            print("Loaded zone names: ")
+            print(self.zoneNames)
+        else:
+            print("No zones config file provided")
+        
 
     # The callback for when the client receives a CONNACK response from the server.
     def on_connect(self, client, userdata, flags, rc):
@@ -371,7 +389,7 @@ class Comfort2(mqtt.Client):
                                     print("zone not ready: "+str(erMsg.zone))
                                     self.comfortsock.sendall("\x03KD1A\r".encode()) #force arm
                             elif line[1:3] == "AM":
-                                amMsg = ComfortAMSystemAlarmReport(line[1:])
+                                amMsg = ComfortAMSystemAlarmReport(line[1:], self.zoneNames)
                                 self.publish(ALARMMESSAGETOPIC, amMsg.message)
                                 if amMsg.triggered:
                                     self.publish(ALARMSTATETOPIC, "triggered")
@@ -419,4 +437,5 @@ class Comfort2(mqtt.Client):
 
 mqttc = Comfort2(DOMAIN)
 mqttc.init(MQTTBROKERIP, MQTTBROKERPORT, MQTTUSERNAME, MQTTPASSWORD, COMFORTIP, COMFORTPORT, PINCODE)
+mqttc.loadZoneNames()
 mqttc.run()
