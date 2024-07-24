@@ -180,7 +180,7 @@ class ComfortEXEntryExitDelayStarted(object):
         self.type = int(data[2:4],16)
         self.delay = int(data[4:6],16)
 
-class Comfort2(mqtt_client.CallbackAPIVersion.VERSION1, mqtt.Client):
+class Comfort2(mqtt.CallbackAPIVersion.VERSION1, mqtt.Client):
     def init(self, mqtt_ip, mqtt_port, mqtt_username, mqtt_password, comfort_ip, comfort_port, comfort_pincode):
         self.mqtt_ip = mqtt_ip
         self.mqtt_port = int(mqtt_port)
@@ -435,7 +435,7 @@ class Comfort2(mqtt_client.CallbackAPIVersion.VERSION1, mqtt.Client):
             infot = self.publish(ALARMAVAILABLETOPIC, 0)
             infot.wait_for_publish()
 
-mqttc = Comfort2(mqtt_client.CallbackAPIVersion.VERSION1, DOMAIN)
+mqttc = Comfort2(mqtt.CallbackAPIVersion.VERSION1, DOMAIN)
 mqttc.init(MQTTBROKERIP, MQTTBROKERPORT, MQTTUSERNAME, MQTTPASSWORD, COMFORTIP, COMFORTPORT, PINCODE)
 mqttc.loadZoneNames()
 mqttc.run()
