@@ -151,6 +151,10 @@ class ComfortAMSystemAlarmReport(object):
         self.parameter = int(data[4:6],16)
         zoneNumber = str(self.parameter)
 
+        if self.alarm == 1 and int(zoneNumber) < 16:
+            print("Zone "+zoneNames.get((zoneNumber), zoneNumber)+" Trouble - Not Triggering")
+            self.triggered = False
+
         if self.alarm == 0: self.message = "Intruder, Zone "+zoneNames.get((zoneNumber), zoneNumber)
         elif self.alarm == 1: self.message = "Zone "+zoneNames.get((zoneNumber), zoneNumber)+" Trouble"
         elif self.alarm == 2: self.message = "Low Battery"
@@ -180,7 +184,7 @@ class ComfortEXEntryExitDelayStarted(object):
         self.type = int(data[2:4],16)
         self.delay = int(data[4:6],16)
 
-class Comfort2(mqtt.CallbackAPIVersion.VERSION1, mqtt.Client):
+class Comfort2(mqtt.Client):
     def init(self, mqtt_ip, mqtt_port, mqtt_username, mqtt_password, comfort_ip, comfort_port, comfort_pincode):
         self.mqtt_ip = mqtt_ip
         self.mqtt_port = int(mqtt_port)
